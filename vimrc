@@ -22,6 +22,11 @@ Plugin 'Valloric/YouCompleteMe'
 Plugin 'scrooloose/nerdtree'
 Plugin 'jistr/vim-nerdtree-tabs'
 
+" Plugin for 'Tag List' provides an overview of the structure of source 
+" code files and allows you to efficiently browse through source code 
+" files for different programming languages
+Plugin 'artemkin/taglist.vim'
+
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -85,9 +90,30 @@ endif
 
 " NERDTree setting
 " open a NERDTree automatically when vim starts up
-autocmd vimenter * NERDTree
+"autocmd StdinReadPre * let s:std_in=1
+"autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+"autocmd vimenter * NERDTree
 " Give a shortcut key to NERD Tree
 map <F2> :NERDTreeToggle<CR>
+
+
+" Taglist setting
+let Tlist_Ctags_Cmd = '/usr/local/bin/ctags'
+" Put the Taglist window on the right
+let Tlist_Use_Right_Window=1
+" the tags tree for the current buffer is automatically opened 
+" and for all the other buffers is closed
+let Tlist_File_Fold_Auto_Close=1
+
+" Automatically Quit Vim if NERDTree and TagList are the only 2 Buffers Left
+let Tlist_Exit_OnlyWindow=1
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
+
+
+" shortcut 1: insert timestamp via Vim
+:iab <expr> tds strftime("%F %b %T")
+" shortcut 2: insert my name via Vim
+:iab <expr> me 'Xiaoqin Yang @Tongji University;  Email: sirxqyang@gmail.com'
 
 " temporarily switch to a paste model which disable 'auto-indenting' and 'auto-expansion'
 nnoremap <F9> :set invpaste paste?<CR>

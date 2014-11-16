@@ -12,17 +12,27 @@ Plugin 'gmarik/Vundle.vim'
 
 " The following are examples of different formats supported.
 " Keep Plugin commands between vundle#begin/end.
-" plugin on GitHub repo
-" Plugin for colorscheme
-Plugin 'sjl/badwolf'
-" Plugin for autocomplete
-Plugin 'Valloric/YouCompleteMe'
+" plugins to be installed on my mac
 
-" Plugin for exploring your filesystem and to open files and directories
+" my plugin for colorscheme
+Plugin 'reedes/vim-colors-pencil'
+
+" my plugins for autocomplete
+Plugin 'honza/vim-snippets'
+Plugin 'garbas/vim-snipmate'
+Plugin 'othree/vim-autocomplpop'
+Plugin 'marcweber/vim-addon-mw-utils'
+Plugin 'tomtom/tlib_vim'
+Plugin 'L9'
+
+" backup plugin for autocomplete
+" Plugin 'Valloric/YouCompleteMe'
+
+" my plugins for exploring your filesystem and to open files and directories
 Plugin 'scrooloose/nerdtree'
 Plugin 'jistr/vim-nerdtree-tabs'
 
-" Plugin for 'Tag List' provides an overview of the structure of source 
+" my plugin for 'Tag List' provides an overview of the structure of source 
 " code files and allows you to efficiently browse through source code 
 " files for different programming languages
 Plugin 'artemkin/taglist.vim'
@@ -31,17 +41,6 @@ Plugin 'artemkin/taglist.vim'
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
-" To ignore plugin indent changes, instead use:
-"filetype plugin on
-"
-" Brief help
-" :PluginList       - lists configured plugins
-" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-" :PluginSearch foo - searches for foo; append `!` to refresh local cache
-" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-"
-" see :h vundle for more details or wiki for FAQ
-" Put your non-Plugin stuff after this line
 
 
 " People: Xiaoqin Steven Yang 
@@ -50,9 +49,43 @@ filetype plugin indent on    " required
 "
 " Colors {{{
 syntax enable           " enable syntax processing
-colorscheme badwolf
-set background=dark
+"colorscheme badwolf
+colorscheme pencil
+set background=light
+"let g:pencil_higher_contrast_ui = 0   " 0=low (def), 1=high
+"let g:pencil_terminal_italics = 1
+"let g:airline_theme = 'pencil'
 set cursorline
+" }}}
+
+
+" Indentation changes when opening Python files {{{
+:filetype on
+:filetype plugin on
+au BufRead,BufNewFile *py,*pyw,*.c,*.h set tabstop=4
+au BufRead,BufNewFile *.py,*pyw set shiftwidth=4
+au BufRead,BufNewFile *.py,*.pyw set expandtab
+fu Select_c_style()
+    if search('^\t', 'n', 150)
+    set shiftwidth=8
+    set noexpandtab
+    el 
+    set shiftwidth=4
+    set expandtab
+    en
+endf
+au BufRead,BufNewFile *.c,*.h call Select_c_style()
+au BufRead,BufNewFile Makefile* set noexpandtab
+highlight BadWhitespace ctermbg=red guibg=red
+au BufRead,BufNewFile *.py,*.pyw match BadWhitespace /^\t\+/
+au BufRead,BufNewFile *.py,*.pyw,*.c,*.h match BadWhitespace /\s\+$/
+au BufRead,BufNewFile *.py,*.pyw,*.c,*.h set textwidth=79
+au BufRead,BufNewFile *.c,*.h set formatoptions-=c formatoptions-=o formatoptions-=r
+au BufNewFile *.py,*.pyw,*.c,*.h set fileformat=unix
+let python_highlight_all=1
+syntax on
+filetype indent on
+set autoindent
 " }}}
 
 " UI Layout {{{
@@ -65,7 +98,13 @@ set showmatch           " higlight matching parenthesis
 " }}}
 
 
-" Set font according to system
+" whitespace display {{{
+set listchars=tab:▸\ ,eol:¬
+:set list
+" }}}
+
+
+" Set font according to system {{{
 if has("mac") || has("macunix")
      set gfn=Source\ Code\ Pro:h15,Menlo:h15
 elseif has("win16") || has("win32")
@@ -75,20 +114,23 @@ elseif has("linux")
 elseif has("unix")
          set gfn=Monospace\ 11
 endif
+" }}}
 
 
-" Open MacVim in fullscreen mode
+" Open MacVim in fullscreen mode {{{
 if has("gui_macvim")
      set fuoptions=maxvert,maxhorz
      au GUIEnter * set fullscreen
 endif
+" }}}
 
 
-" fix Delete key problems
+" fix Delete key problems {{{
 :set backspace+=start,eol,indent
+" }}}
 
 
-" NERDTree setting
+" NERDTree setting {{{
 " open a NERDTree automatically when vim starts up
 "autocmd StdinReadPre * let s:std_in=1
 "autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
@@ -96,6 +138,9 @@ endif
 " Give a shortcut key to NERD Tree
 map <F2> :NERDTreeToggle<CR>
 
+" NERDTree mappings
+"nnoremap <silent> <F9> :NERDTreeToggle <cr>
+"inoremap <silent> <F9> <Esc>:NERDTreeToggle <cr>
 
 " Taglist setting
 let Tlist_Ctags_Cmd = '/usr/local/bin/ctags'
@@ -108,14 +153,44 @@ let Tlist_File_Fold_Auto_Close=1
 " Automatically Quit Vim if NERDTree and TagList are the only 2 Buffers Left
 let Tlist_Exit_OnlyWindow=1
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
+" }}}
 
+
+" FileHeading {{{
 
 " shortcut 1: insert timestamp via Vim
-:iab <expr> tds strftime("%F %b %T")
+:iab <expr> tds '# Timestamp: '.strftime("%F %b %T")
 " shortcut 2: insert my name via Vim
-:iab <expr> me 'Xiaoqin Yang @Tongji University;  Email: sirxqyang@gmail.com'
+:iab <expr> me '# Author: Xiaoqin Yang @Tongji University;  Email: sirxqyang@gmail.com'
 
-" temporarily switch to a paste model which disable 'auto-indenting' and 'auto-expansion'
+function FileHeading()
+  let s:line=line(".")
+  call setline(s:line, "\#! /usr/bin/env python")
+  call append(s:line, "")
+  call append(s:line+1, "\# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+  call append(s:line+2,"\# Author - Xiaoqin Yang @ Tongji University")
+  call append(s:line+3,"\# Email - sirxqyang@gmail.com")
+  call append(s:line+4,"\# Timestamp - " .strftime("%x %X (%Z)"))
+  call append(s:line+5,"\#")
+  call append(s:line+6,"\# Description - ")
+  call append(s:line+7, "\# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+  call append(s:line+8, "")
+  unlet s:line
+endfunction
+
+imap <F10> <Esc>mz:execute FileHeading()<CR>`zjA
+" }}}
+
+
+" temporarily switch to a paste model which disable 'auto-indenting' and 'auto-expansion' {{{
 nnoremap <F9> :set invpaste paste?<CR>
 set pastetoggle=<F9>
 set showmode
+" }}}
+
+
+" setting for auto-complete {{{
+let g:acp_behaviorSnipmateLength = 1
+" }}}
+
+
